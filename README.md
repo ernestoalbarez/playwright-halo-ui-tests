@@ -3,7 +3,7 @@
 ![Playwright](https://img.shields.io/badge/Playwright-1.60.0-2EAD33?logo=playwright&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=white)
-![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=github-actions&logoColor=white)
+[![Playwright Tests](https://github.com/ernestoalbarez/playwright-halo-ui-tests/actions/workflows/playwright.yml/badge.svg)](https://github.com/ernestoalbarez/playwright-halo-ui-tests/actions/workflows/playwright.yml)
 ![Allure](https://img.shields.io/badge/Allure-Report-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
