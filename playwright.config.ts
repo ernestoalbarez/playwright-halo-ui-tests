@@ -4,7 +4,10 @@ export default defineConfig({
   testDir: './tests',
   timeout: 30_000,
   retries: process.env['CI'] ? 1 : 0,
-  reporter: 'html',
+  reporter: [
+    ['html'],
+    ['allure-playwright', { outputFolder: 'allure-results' }],
+  ],
   use: {
     baseURL: 'https://halopowered.com',
     screenshot: 'only-on-failure',

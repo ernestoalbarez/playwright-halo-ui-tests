@@ -4,6 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=white)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=github-actions&logoColor=white)
+![Allure](https://img.shields.io/badge/Allure-Report-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 End-to-end test suite for [halopowered.com](https://halopowered.com), built with Playwright and TypeScript. Tests run across three desktop browsers and four mobile device emulators. The suite follows the **Page Object Model** pattern with a **custom fixtures layer** that auto-instantiates page objects and handles navigation before each test.
@@ -152,11 +153,6 @@ Each page object lives in `pages/` and composes a matching class from `locators/
 | `WorkPage` | `/work` | Heading, scroll-to-bottom helper |
 | `ServicesPage` | `/services` | Heading, service item count — available for future specs |
 
-### Locator notes
-
-- `[data-framer-name="menu"]` — the hamburger button. It is **mobile-only**; on desktop it is hidden or absent. Tests guard against this with the `isMobile` fixture.
-- `getByRole('navigation').getByRole('link', ...)` — navigation link selectors. On a Framer-built site, the mobile overlay menu may render links inside a `<div>` rather than a `<nav>`. If mobile nav assertions fail after the hamburger is opened, remove the `getByRole('navigation')` scope and query `page.getByRole('link', { name: ... })` directly.
-
 ---
 
 ## Fixtures
@@ -246,7 +242,98 @@ On failure, Playwright saves a **screenshot**, a **video**, and a **trace** for 
 
 ---
 
-## Reporting
+## Allure reporting
+
+This suite produces [Allure](https://allurereport.org) reports alongside the standard Playwright HTML report. Test results are written to `allure-results/` by the `allure-playwright` reporter; `allure-commandline` converts them into an interactive HTML dashboard in `allure-report/`. Both directories are git-ignored.
+
+Each test is annotated with **feature**, **story**, **severity**, and **owner** labels derived from its purpose:
+
+| Feature | Stories | Severity distribution |
+|---|---|---|
+| Homepage | Page Identity, Hero Section, Navigation, Mobile Navigation, Call to Action, Footer | critical / normal / minor |
+| Navigation | Routing | normal |
+| Contact | Page Load, Page Structure, Contact Form | critical / normal |
+| Footer | Contact Info | minor |
+| Work | Page Load, Page Structure | normal / minor |
+
+### Run tests and open the Allure report in one command
+
+```bash
+npm run test:allure
+```
+
+This runs the full test suite, generates the report (even if some tests fail), and opens it in your browser. It is equivalent to running the three steps below in sequence.
+
+### Step-by-step
+
+```bash
+# 1. Run tests — results land in allure-results/
+npx playwright test
+
+# 2. Generate the HTML report from the raw results
+npm run allure:generate
+# expands to: allure generate allure-results --clean -o allure-report
+
+# 3. Open the generated report in your browser
+npm run allure:open
+# expands to: allure open allure-report
+```
+
+### Live server (auto-generates from results)
+
+```bash
+npm run allure:serve
+# expands to: allure serve allure-results
+```
+
+Starts a local HTTP server, generates the report on the fly, and opens the browser. Useful during active debugging — no separate generate step needed.
+
+### Allure metadata in tests
+
+Each spec imports annotating functions directly from `allure-js-commons`:
+
+```typescript
+import { feature, story, severity, owner } from 'allure-js-commons';
+
+test('a contact form or contact section is visible', async ({ contactPage }) => {
+  await feature('Contact');
+  await story('Contact Form');
+  await severity('critical');
+  await owner('QA');
+  const isVisible = await contactPage.isFormVisible();
+  expect(isVisible).toBe(true);
+});
+```
+
+Valid severity values (from lowest to highest impact): `trivial` · `minor` · `normal` · `critical` · `blocker`.
+
+### CI — uploading Allure results as artifacts
+
+```yaml
+- name: Run tests
+  run: npx playwright test
+  env:
+    CI: true
+
+- name: Upload Allure results
+  uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: allure-results
+    path: allure-results/
+    retention-days: 7
+```
+
+Generate and view the report locally after downloading the artifact:
+
+```bash
+npm run allure:generate
+npm run allure:open
+```
+
+---
+
+## Playwright HTML reporting
 
 ```bash
 npx playwright show-report
